@@ -24,14 +24,16 @@ class ToDoController {
 
     adicionarTarefa(event) {
         event.preventDefault();
-        if (this._validarDados()) {
+        var msg = this._validarDados();
+        if (msg.length == 0) {
             this._listaToDo.adiciona(this._criaToDo());
             this._limpaFormulario();
             alert("Tarefa registrada com sucesso!");
             this._carregarDados();
             return;
         }
-        alert("Os campos Nome/Descrição devem conter informações e deve conter no mínimo 3 caracteres!");
+        alert("Erro de validação!");
+        console.log(msg);
     }
 
     limparTarefas(event) {
@@ -48,7 +50,17 @@ class ToDoController {
     }
 
     _validarDados() {
-        return !(this._inputNome.value == '' || this._inputNome.value.length <= 3 || this._inputDescricao.value == '' || this._inputDescricao.value.length <= 3)
+        var msg = [];
+        if (this._inputNome.value == '' || this._inputNome.value.length <= 3)
+            msg.push("O campo Nome deve ser informado e conter no mínimo 3 caracteres!");
+        if (this._inputDescricao.value == '' || this._inputDescricao.value.length <= 3)
+            msg.push("O campo Descrição deve ser informado e conter no mínimo 3 caracteres!");
+        var nome = this._inputNome.value;
+        this._listaToDo.todos.forEach(function (toDo) {
+            if (nome.toUpperCase() == toDo._nome.toUpperCase())
+                msg.push("A Tarefa " + nome + " já foi registrada!");
+        });
+        return msg;
     }
 
     _preencherTabela(dados) {
