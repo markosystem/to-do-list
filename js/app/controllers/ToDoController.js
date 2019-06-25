@@ -4,10 +4,9 @@ class ToDoController {
         this._form = document.querySelector("#form-cadastro");
         this._inputNome = document.querySelector("#nome");
         this._inputDescricao = document.querySelector("#descricao");
-        this._inputData = document.querySelector("#data");
+        //this._inputData = document.querySelector("#data");
         this._inputSituacao = document.querySelector("#situacao");
 
-        this._listaToDo = new ListaToDo();
         this._toDoView = new ToDoView(document.querySelector("#contentView"));
         this._toDoView.index();
 
@@ -15,55 +14,82 @@ class ToDoController {
         botao_sobre.addEventListener("click", function () {
             alert("Produzido por Marcos Batista!")
         });
-        this.carregarDados();
+        this._carregarDados();
+    }
+
+    _carregarDados() {
+        this._listaToDo = new ListaToDo();
+        this._preencherTabela(this._listaToDo.todos);
     }
 
     adicionarTarefa(event) {
         event.preventDefault();
-        this._listaToDo.adiciona(this._criaToDo());
-        this._limpaFormulario();
-        this.carregarDados();
-        alert("Tarefa registrada com sucesso!");
-    }
-
-    carregarDados() {
-        var dados = this._toDoList();
-        var tbody = document.querySelector("#table-body");
-        if (dados == null || dados.length == 0) {
-            this._limparTabela(tbody);
+        if (this._validarDados()) {
+            this._listaToDo.adiciona(this._criaToDo());
+            this._limpaFormulario();
+            alert("Tarefa registrada com sucesso!");
+            this._carregarDados();
             return;
         }
-        this._preencherTabela(dados, tbody);
+        alert("Os campos Nome/Descrição devem conter informações e deve conter no mínimo 3 caracteres!");
     }
 
-    _limparTabela(tbody) {
-        let tr = document.createElement("tr");
-        tr.classList.add("tarefa");
-        let td = document.createElement("td");
-        td.setAttribute("colspan", 3);
-        td.textContent = "Nenhuma informação foi encontrada!";
-        tr.appendChild(td);
-        tbody.appendChild(tr);
+    limparTarefas(event) {
+        if (this._listaToDo.todos == null || this._listaToDo.todos.length == 0) {
+            alert("Nenhuma tarefa registrada!");
+            return;
+        }
+        var confirmacao = confirm("Tem certeza que deseja apagar as tarefas?");
+        if (!confirmacao)
+            return;
+        event.preventDefault();
+        this._listaToDo.clear;
+        this._carregarDados();
     }
 
-    _preencherTabela(dados, tbody) {
+    _validarDados() {
+        return !(this._inputNome.value == '' || this._inputNome.value.length <= 3 || this._inputDescricao.value == '' || this._inputDescricao.value.length <= 3)
+    }
 
-        dados.forEach(function (elemento) {
+    _preencherTabela(dados) {
+        var tbody = document.querySelector("#table-body");
+        this._limparTabela(tbody);
+        if (dados == null || dados.length == 0) {
+            let tr = document.createElement("tr");
+            tr.classList.add("tarefa");
+            let td = document.createElement("td");
+            td.setAttribute("colspan", 3);
+            td.textContent = "Nenhuma informação foi encontrada!";
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+        dados.forEach(function (toDo) {
             let tr = document.createElement("tr");
             tr.classList.add("tarefa");
 
             let tdNome = document.createElement("td");
-            tdNome.textContent = elemento.nome;
+            tdNome.textContent = toDo._nome;
             tr.appendChild(tdNome);
 
-            let tdData = document.createElement("td");
-            tdData.textContent = DateHelper.dataParaTexto(elemento.data);
-            tr.appendChild(tdData);
+            let tdSituacao = document.createElement("td");
+            tdSituacao.textContent = toDo._situacao == 0 ? "Aguardando" : toDo._situacao == 1 ? "Feito" : "Cancelado";
+            tr.appendChild(tdSituacao);
 
+            /*          let tdData = document.createElement("td");
+                        tdData.textContent = DateHelper.dataParaTexto(toDo.data);
+                        tr.appendChild(tdData);
+             */
             let tdAcoes = document.createElement("td");
-            tdAcoes.textContent = "<botao>";
-            tr.appendChild(tdAcoes);
 
+            let btAcao = document.createElement("button");
+            btAcao.classList.add("btn", "btn-primary", "btn-sm");
+            let iconeBt = document.createElement("span");
+            iconeBt.setAttribute("data-feather", "circle")
+            btAcao.appendChild(iconeBt);
+            tdAcoes.appendChild(btAcao);
+            tdAcoes.textContent = "View";
+            tr.appendChild(tdAcoes);
             tbody.appendChild(tr);
         });
     }
@@ -71,16 +97,15 @@ class ToDoController {
     _criaToDo() {
         return new ToDo(this._inputNome.value,
             this._inputDescricao.value,
-            DateHelper.textoParaData(this._inputData.value),
             this._inputSituacao.selectedIndex);
-    }
-
-    _toDoList() {
-        return this._listaToDo.todos;
     }
 
     _limpaFormulario() {
         this._form.reset();
         this._inputNome.focus();
+    }
+
+    _limparTabela(tbody) {
+        tbody.innerHTML = "";
     }
 }

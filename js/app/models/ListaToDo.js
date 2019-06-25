@@ -1,14 +1,23 @@
 class ListaToDo {
 
     constructor() {
-        this._todo = [];
+        if (localStorage.getItem("lista-tarefas") == null)
+            localStorage.setItem("lista-tarefas", JSON.stringify([]));
+        this._toDoAll = JSON.parse(localStorage.getItem("lista-tarefas"));
     }
 
-    adiciona(todo) {
-        this._todo.push(todo);
+    adiciona(toDo) {
+        var dados = this._toDoAll;
+        dados.push(toDo);
+        this._toDoAll = localStorage.setItem("lista-tarefas", JSON.stringify(dados));
     }
 
     get todos() {
-        return [].concat(this._todo);
+        return this._toDoAll;
     }
+
+    get clear() {
+        localStorage.clear();
+    }
+
 }

@@ -15,7 +15,7 @@ class ToDoView {
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Data</th>
+                        <th>Situação</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
