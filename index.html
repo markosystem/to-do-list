@@ -47,9 +47,9 @@
             <!-- Fim Menu -->
 
             <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-                <h2>Criar nova Tarefa</h2><br />
+                <h2>Nova Tarefa</h2><br />
                 <form id="form-cadastro" class="form" onsubmit="toDoController.adicionarTarefa(event)">
-
+                    <input type="hidden" id="edicao" value="" />
                     <div class="form-group">
                         <label for="nome">Nome</label>
                         <input type="text" id="nome" value="" class="form-control"
@@ -69,8 +69,11 @@
                             <option>Cancelado</option>
                         </select>
                     </div>
-                    <button class="btn btn-primary" type="submit">Incluir</button>
-                    <button class="btn btn-danger" onclick="toDoController.limparTarefas(event)">Limpar Tarefas</button>
+                    <div class="text-center">
+                        <button class="btn btn-primary" type="submit" id="botaoSubmit">Incluir</button>
+                        <button class="btn btn-danger" onclick="toDoController.limparTarefas(event)" id="botaoReset">Limpar
+                            Tarefas</button>
+                    </div>
                 </form>
 
                 <hr />
@@ -106,6 +109,7 @@
     <script src="js/app/models/ListaToDo.js"></script>
     <script src="js/app/view/ToDoView.js"></script>
     <script src="js/app/helpers/Message.js"></script>
+    <script src="js/app/helpers/Validation.js"></script>
     <script>
         let toDoController = new ToDoController();
     </script>

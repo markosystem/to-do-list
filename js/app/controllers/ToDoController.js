@@ -1,72 +1,95 @@
 class ToDoController {
-
     constructor() {
         this._form = document.querySelector("#form-cadastro");
         this._inputNome = document.querySelector("#nome");
         this._inputDescricao = document.querySelector("#descricao");
         //this._inputData = document.querySelector("#data");
         this._inputSituacao = document.querySelector("#situacao");
+        this._inputEdicao = document.querySelector("#edicao");
 
         this._toDoView = new ToDoView(document.querySelector("#contentView"));
         this._toDoView.index();
 
         var botao_sobre = document.querySelector("#nova-tarefa");
-        botao_sobre.addEventListener("click", function () {
-            alert("Produzido por Marcos Batista!")
-        });
+        botao_sobre.addEventListener("click", function () { alert("Desenvolvido por Marcos Batista!") });
         this._carregarDados();
-    }
-
-    _carregarDados() {
-        this._listaToDo = new ListaToDo();
-        this._preencherTabela(this._listaToDo.todos);
     }
 
     adicionarTarefa(event) {
         event.preventDefault();
         var msg = this._validarDados();
         if (msg.length == 0) {
-            this._listaToDo.adiciona(this._criaToDo());
-            this._limpaFormulario();
-            alert("Tarefa registrada com sucesso!");
-            this._carregarDados();
+            if (this._listaToDo.salvar(this._criaToDo(), this._inputEdicao.value)) {
+                this._limpaFormulario();
+                alert("Alterações realizadas com sucesso!");
+                this._carregarDados();
+                return;
+            }
+            alert("Houve um problema ao Salvar as Alterações!");
             return;
         }
-        alert("Erro de validação!");
-        console.log(msg);
+        var msgs = "";
+        msg.forEach(function (item) { msgs += item + "\n"; });
+        alert("Atenção:\n".concat(msgs));
+        this._inputNome.focus();
+    }
+
+    editarTarefa(nameTarefa) {
+        this._inputEdicao.value = nameTarefa;
+        let toDo = this._listaToDo.selecionar(nameTarefa);
+        if (toDo != null) {
+            this._inputNome.value = toDo._nome;
+            this._inputDescricao.value = toDo._descricao;
+            this._inputSituacao.selectedIndex = toDo._situacao;
+            return;
+        }
+        alert(`A tarefa '${nomeTarefa}' não foi encontrada!`);
+    }
+
+    removerTarefa(nameTarefa) {
+        let toDo = this._listaToDo.selecionar(nameTarefa);
+        if (toDo != null) {
+            if (!confirm(`Tem certeza que deseja remover a tarefa '${nameTarefa}'?`))
+                return;
+            if (this._listaToDo.remover(toDo)) {
+                alert("Tarefa removida com sucesso!");
+                this._carregarDados();
+                return;
+            }
+            alert("Houve um problema ao remover a Tarefa, por favor, tente novamente!");
+            return;
+        }
+        alert(`A tarefa '${nomeTarefa}' não foi encontrada!`);
     }
 
     limparTarefas(event) {
-        if (this._listaToDo.todos == null || this._listaToDo.todos.length == 0) {
+        event.preventDefault();
+        if (this._listaToDo.todos.length == 0) {
             alert("Nenhuma tarefa registrada!");
             return;
         }
-        var confirmacao = confirm("Tem certeza que deseja apagar as tarefas?");
-        if (!confirmacao)
+        if (!confirm("Tem certeza que deseja apagar as tarefas?"))
             return;
-        event.preventDefault();
         this._listaToDo.clear;
         this._carregarDados();
     }
 
     _validarDados() {
-        var msg = [];
-        if (this._inputNome.value == '' || this._inputNome.value.length <= 3)
-            msg.push("O campo Nome deve ser informado e conter no mínimo 3 caracteres!");
-        if (this._inputDescricao.value == '' || this._inputDescricao.value.length <= 3)
-            msg.push("O campo Descrição deve ser informado e conter no mínimo 3 caracteres!");
-        var nome = this._inputNome.value;
-        this._listaToDo.todos.forEach(function (toDo) {
-            if (nome.toUpperCase() == toDo._nome.toUpperCase())
-                msg.push("A Tarefa " + nome + " já foi registrada!");
-        });
-        return msg;
+        var validate = new Validation();
+        var msgs = validate.validar(this._criaToDo(), this._inputEdicao.value);
+        return msgs;
+    }
+
+    _carregarDados() {
+        this._listaToDo = new ListaToDo();
+        this._preencherTabela(this._listaToDo.todos);
+        this._inputEdicao.value = "";
     }
 
     _preencherTabela(dados) {
         var tbody = document.querySelector("#table-body");
         this._limparTabela(tbody);
-        if (dados == null || dados.length == 0) {
+        if (dados.length == 0) {
             let tr = document.createElement("tr");
             tr.classList.add("tarefa");
             let td = document.createElement("td");
@@ -81,6 +104,7 @@ class ToDoController {
             tr.classList.add("tarefa");
 
             let tdNome = document.createElement("td");
+            tdNome.classList.add("name-info");
             tdNome.textContent = toDo._nome;
             tr.appendChild(tdNome);
 
@@ -93,17 +117,41 @@ class ToDoController {
                         tr.appendChild(tdData);
              */
             let tdAcoes = document.createElement("td");
+            tdAcoes.classList.add("text-center");
 
-            let btAcao = document.createElement("button");
-            btAcao.classList.add("btn", "btn-primary", "btn-sm");
-            let iconeBt = document.createElement("span");
-            iconeBt.setAttribute("data-feather", "circle")
-            btAcao.appendChild(iconeBt);
-            tdAcoes.appendChild(btAcao);
-            tdAcoes.textContent = "View";
+            /* Incluindo botao de Visualização */
+            let btVisualizar = document.createElement("button");
+            btVisualizar.classList.add("btn", "btn-success", "btn-sm", "botao-view");
+            btVisualizar.setAttribute("onclick", `toDoController.visualizarTarefa('${toDo._nome}')`);
+            btVisualizar.textContent = "Visualizar"
+            tdAcoes.appendChild(btVisualizar);
+
+            /* Incluindo botao de Edição */
+            let btEditar = document.createElement("button");
+            btEditar.classList.add("btn", "btn-primary", "btn-sm", "botao-view");
+            btEditar.setAttribute("onclick", `toDoController.editarTarefa('${toDo._nome}')`);
+            btEditar.textContent = "Editar"
+            tdAcoes.appendChild(btEditar);
+
+            /* Incluindo botao de Exclusão */
+            let btRemover = document.createElement("button");
+            btRemover.classList.add("btn", "btn-warning", "btn-sm", "botao-view");
+            btRemover.setAttribute("onclick", `toDoController.removerTarefa('${toDo._nome}')`);
+            btRemover.textContent = "Remover"
+            tdAcoes.appendChild(btRemover);
+
             tr.appendChild(tdAcoes);
             tbody.appendChild(tr);
         });
+    }
+
+    visualizarTarefa(nameTarefa) {
+        let toDo = this._listaToDo.selecionar(nameTarefa);
+        if (toDo != null) {
+            alert(this._listaToDo.visualizar(toDo));
+            return;
+        }
+        alert(`A tarefa '${nomeTarefa}' não foi encontrada!`);
     }
 
     _criaToDo() {
